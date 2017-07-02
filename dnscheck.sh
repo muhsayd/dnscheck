@@ -6,6 +6,11 @@ echo -e "Usage:
 \t$0 --domain {DOMAIN}\t\t\t: To Process One Domain {DOMAIN}
 \t$0 --all\t\t\t\t: To Loop For All Domains On The Server."
 }
+sendmail(){
+	if [ -f "/root/dnscheck/log.$$" ]; then
+		cat /root/dnscheck/log.$$ | mail -s "DNSCheck script Run On: `hostname` to restore unexpectedly deleted Zones" -r root@`hostname` servers@murabba.com
+	fi
+}
 synczone(){
 	domain="$1"
 	result=`/scripts/dnscluster synczonelocal ${domain} | head -1`
@@ -21,9 +26,9 @@ uninstallSPFandDKeyID(){
 
 installSPFandDKeyIDandSetTTL(){
 	user="$1"
-	/usr/local/cpanel/bin/dkim_keys_install ${user}
-	/usr/local/cpanel/bin/spf_installer ${user}
-	/usr/local/cpanel/bin/set_zone_ttl --user ${user} --force --newttl 300
+	/usr/local/cpanel/bin/dkim_keys_install ${user} && echo "Adding/Updating DKim_Key Records"
+	/usr/local/cpanel/bin/spf_installer ${user} && echo "Adding/Updating SPF Records"
+	/usr/local/cpanel/bin/set_zone_ttl --user ${user} --force --newttl 300 >/dev/null && echo "Setting the TTL for the domain to 300"
 }
 
 restoreZoneFromBackup(){
@@ -102,13 +107,17 @@ loopDeletedZones(){
 mainFunction(){
 	if [ "$#" -eq 0 ]; then
 		loopDeletedZones
+		sendmail
 	elif  [ "$#" -eq 1 ] && [ "$1" == '--all' ]; then
 		for domain in `cat /etc/userdomains | cut -d: -f1`
 		do
 			processDomain ${domain}
+			sendmail
 		done
 	elif [ "$#" -eq 2 ] && [ "$1" == '--domain' ]; then
 		domain="$2"
+		processDomain ${domain}
+		sendmail
 	else
 		usage
 	fi
