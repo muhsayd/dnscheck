@@ -47,29 +47,29 @@ recreateFreshZone(){
 for domain in `grep 'Cpanel::NameServer::Conf::BIND::removezone' /usr/local/cpanel/logs/error_log  | cut -d'"' -f2 | sort -u`; 
 	do 
 		if $(egrep -q "^${domain}:" /etc/userdomains 2>/dev/null ) && [ ! -e /var/named/${domain}.db ]; then
-                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
-                echo -e "#\t\t\t\tProcessing ${domain}\t\t\t\t#" | tea -a /root/dnscheck/log.$$
-                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
+                echo "#################################################################################" | tee -a /root/dnscheck/log.$$
+                echo -e "#\t\t\t\tProcessing ${domain}\t\t\t\t#" | tee -a /root/dnscheck/log.$$
+                echo "#################################################################################" | tee -a /root/dnscheck/log.$$
 			user=`grep -E "^${domain}:" /etc/userdomains | cut -d: -f2` 2>/dev/null
 			if [ "${user}" == ' nobody' ]; then
 				user=''
 				user=`grep -rl "${domain}" /var/cpanel/userdata/ | awk -F'/' '{print $(NF-1)}' | sort -u`
 				if [ "${user}" == '' ]; then
-					echo "No user exist On The System For This Domain" | tea -a /root/dnscheck/log.$$
+					echo "No user exist On The System For This Domain" | tee -a /root/dnscheck/log.$$
 					exit 127
 				fi
 			fi
-				echo "Domain: ${domain} Is Owned by ${user}, You need to add zone file for it manually" | tea -a /root/dnscheck/log.$$
-				synczone ${domain} | tea -a /root/dnscheck/log.$$
+				echo "Domain: ${domain} Is Owned by ${user}, You need to add zone file for it manually" | tee -a /root/dnscheck/log.$$
+				synczone ${domain} | tee -a /root/dnscheck/log.$$
 				if [ ! -f /var/named/${domain}.db ]; then
-					restoreZoneFromBackup ${domain} ${user} | tea -a /root/dnscheck/log.$$
+					restoreZoneFromBackup ${domain} ${user} | tee -a /root/dnscheck/log.$$
 				fi
                         	if [ ! -f /var/named/${domain}.db ]; then
-					echo "Failed To Restore the Zone File From Available Backups" | tea -a /root/dnscheck/log.$$
-                                	recreateFreshZone ${domain} ${user} | tea -a /root/dnscheck/log.$$
+					echo "Failed To Restore the Zone File From Available Backups" | tee -a /root/dnscheck/log.$$
+                                	recreateFreshZone ${domain} ${user} | tee -a /root/dnscheck/log.$$
                         	fi
-		echo "#################################################################################" | tea -a /root/dnscheck/log.$$
-                echo -e "#\t\t\t\t\tDone\t\t\t\t\t#" | tea -a /root/dnscheck/log.$$
-                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
+		echo "#################################################################################" | tee -a /root/dnscheck/log.$$
+                echo -e "#\t\t\t\t\tDone\t\t\t\t\t#" | tee -a /root/dnscheck/log.$$
+                echo "#################################################################################" | tee -a /root/dnscheck/log.$$
 		fi 
 	done
