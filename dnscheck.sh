@@ -23,12 +23,13 @@ installSPFandDKeyIDandSetTTL(){
 restoreZoneFromBackup(){
 	domain="$1"
 	user="$2"
+	echo "Trying To Restore the Zone File From The Most Recent Backup"
 	if [ -f "/backup/cpbackup/daily/dirs/_var_named/${domain}.db" ]; then
-		cp -p /backup/cpbackup/daily/dirs/_var_named/${domain}.db /var/named/${domain}.db
+		cp -pv /backup/cpbackup/daily/dirs/_var_named/${domain}.db /var/named/${domain}.db
 	elif [ -f "/backup/cpbackup/weekly/dirs/_var_named/${domain}.db" ]; then
-		cp -p /backup/cpbackup/weekly/dirs/_var_named/${domain}.db /var/named/${domain}.db
+		cp -pv /backup/cpbackup/weekly/dirs/_var_named/${domain}.db /var/named/${domain}.db
 	elif [ -f "/backup/cpbackup/monthly/dirs/_var_named/${domain}.db" ]; then
-		cp -p /backup/cpbackup/monthly/dirs/_var_named/${domain}.db /var/named/${domain}.db
+		cp -pv /backup/cpbackup/monthly/dirs/_var_named/${domain}.db /var/named/${domain}.db
 	fi
 	if [ -f /var/named/${domain}.db ]; then
 		uninstallSPFandDKeyID ${user}
@@ -46,28 +47,29 @@ recreateFreshZone(){
 for domain in `grep 'Cpanel::NameServer::Conf::BIND::removezone' /usr/local/cpanel/logs/error_log  | cut -d'"' -f2 | sort -u`; 
 	do 
 		if $(egrep -q "^${domain}:" /etc/userdomains 2>/dev/null ) && [ ! -e /var/named/${domain}.db ]; then
-                echo "#################################################################################"
-                echo -e "#\t\t\t\tProcessing ${domain}\t\t\t\t#"
-                echo "#################################################################################"
+                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
+                echo -e "#\t\t\t\tProcessing ${domain}\t\t\t\t#" | tea -a /root/dnscheck/log.$$
+                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
 			user=`grep -E "^${domain}:" /etc/userdomains | cut -d: -f2` 2>/dev/null
 			if [ "${user}" == ' nobody' ]; then
 				user=''
 				user=`grep -rl "${domain}" /var/cpanel/userdata/ | awk -F'/' '{print $(NF-1)}' | sort -u`
 				if [ "${user}" == '' ]; then
-					echo "No user exist On The System For This Domain"
+					echo "No user exist On The System For This Domain" | tea -a /root/dnscheck/log.$$
 					exit 127
 				fi
 			fi
-				echo "Domain: ${domain} Is Owned by ${user}, You need to add zone file for it manually";
-				synczone ${domain}
+				echo "Domain: ${domain} Is Owned by ${user}, You need to add zone file for it manually" | tea -a /root/dnscheck/log.$$
+				synczone ${domain} | tea -a /root/dnscheck/log.$$
 				if [ ! -f /var/named/${domain}.db ]; then
-					restoreZoneFromBackup ${domain} ${user}
+					restoreZoneFromBackup ${domain} ${user} | tea -a /root/dnscheck/log.$$
 				fi
                         	if [ ! -f /var/named/${domain}.db ]; then
-                                	recreateFreshZone ${domain} ${user}
+					echo "Failed To Restore the Zone File From Available Backups" | tea -a /root/dnscheck/log.$$
+                                	recreateFreshZone ${domain} ${user} | tea -a /root/dnscheck/log.$$
                         	fi
-		echo "#################################################################################"
-                echo -e "#\t\t\t\t\tDone\t\t\t\t\t#"
-                echo "#################################################################################"
+		echo "#################################################################################" | tea -a /root/dnscheck/log.$$
+                echo -e "#\t\t\t\t\tDone\t\t\t\t\t#" | tea -a /root/dnscheck/log.$$
+                echo "#################################################################################" | tea -a /root/dnscheck/log.$$
 		fi 
 	done
