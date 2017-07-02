@@ -2,9 +2,9 @@
 
 usage(){
 echo -e "Usage:
-\t$0\t\t\t\t\t: To loop For The Deleted Zones From The cPanel Error Log
-\t$0 --domain {DOMAIN}\t\t\t: To Process One Domain {DOMAIN}
-\t$0 --all\t\t\t\t: To Loop For All Domains On The Server."
+\tsh $0\t\t\t\t\t: To loop For The Deleted Zones From The cPanel Error Log
+\tsh $0 --domain {DOMAIN}\t\t: To Process One Domain {DOMAIN}
+\tsh $0 --all\t\t\t\t: To Loop For All Domains On The Server."
 }
 sendmail(){
 	if [ -f "/root/dnscheck/log.$$" ]; then
