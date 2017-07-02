@@ -8,7 +8,7 @@ echo -e "Usage:
 }
 sendmail(){
 	if [ -f "/root/dnscheck/log.$$" ]; then
-		cat /root/dnscheck/log.$$ | mail -s "DNSCheck script Run On: `hostname` to restore unexpectedly deleted Zones" -r root@`hostname` servers@murabba.com
+		cat /root/dnscheck/log.$$ | mail -s "DNSCheck script Run On: `hostname` to restore unexpectedly deleted Zones" -r root@`hostname` support@murabba.com
 	fi
 }
 synczone(){
